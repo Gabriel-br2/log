@@ -1,16 +1,17 @@
 import sys
-import traceback
-import datetime
 import time
 import logging
 import __main__
+import datetime
 import functools
+import traceback
+
 from pathlib import Path
+from types import TracebackType
+from rich.logging import RichHandler
 from logging.handlers import RotatingFileHandler
 from typing import Any, Callable, Dict, Type, TypeVar, cast
-from types import TracebackType
 
-from rich.logging import RichHandler
 
 F = TypeVar('F', bound=Callable[..., Any])
 
@@ -24,7 +25,7 @@ class HandleDebug:
         name = filename if filename != "__main__" else name
 
         if not hasattr(self, 'is_initialized'):
-            now: str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')            
+            now: str  = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')            
             file_name = f"LOG_{name}/{now}.log"
 
             log_path = Path(file_name)
@@ -40,18 +41,18 @@ class HandleDebug:
             fmt = logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s")
 
             console_handler = RichHandler(
-                level=logging.INFO,
-                show_path=True,
-                rich_tracebacks=True,
-                tracebacks_show_locals=True,
-                markup=True,
+                level                  = logging.INFO,
+                show_path              = True,
+                rich_tracebacks        = True,
+                tracebacks_show_locals = True,
+                markup                 = True,
             )
 
             file_handler = RotatingFileHandler(
-                filename=file_name, 
-                maxBytes=5 * 1024 * 1024, 
-                backupCount=3,            
-                encoding="utf-8"
+                filename    = file_name, 
+                maxBytes    = 5 * 1024 * 1024, 
+                backupCount = 3,            
+                encoding    = "utf-8"
             )
             file_handler.setLevel(logging.DEBUG)
             file_handler.setFormatter(fmt)
@@ -69,8 +70,8 @@ class HandleDebug:
 
     def _excepthook(
             self, 
-            exc_type: Type[BaseException], 
-            exc_value: BaseException,
+            exc_type     : Type[BaseException], 
+            exc_value    : BaseException,
             exc_traceback: TracebackType
         ) -> None:
 
@@ -95,14 +96,71 @@ class HandleDebug:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             
             start_time = time.perf_counter()
-            result = func(*args, **kwargs)
-            end_time = time.perf_counter()
+            result     = func(*args, **kwargs)
+            end_time   = time.perf_counter()
 
             self.logger.debug(f"[TIMER] '{func.__name__}' executed in {end_time - start_time:.6f} seconds.")
             
             return result
         return cast(F, wrapper)
 
+    def deactivate(self) -> None:
+        self.logger.setLevel(logging.CRITICAL + 1)
+        self.logger.info("Logging deactivated. No further messages will be logged.")
+
+    def activate(self) -> None:
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.info("Logging activated. All messages will be logged.")
+
+    def deactivate_console(self) -> None:
+        for handler in self.logger.handlers:
+            if isinstance(handler, RichHandler):
+                self.logger.removeHandler(handler)
+                self.logger.info("Console logging deactivated.")
+                break
+
+    def activate_console(self) -> None:
+        if not any(isinstance(handler, RichHandler) for handler in self.logger.handlers):
+            console_handler = RichHandler(
+                level                  = logging.INFO,
+                show_path              = True,
+                rich_tracebacks        = True,
+                tracebacks_show_locals = True,
+                markup                 = True,
+            )
+            self.logger.addHandler(console_handler)
+            self.logger.info("Console logging activated.")
+
+    def deactivate_file(self) -> None:
+        for handler in self.logger.handlers:
+            if isinstance(handler, RotatingFileHandler):
+                self.logger.removeHandler(handler)
+                self.logger.info("File logging deactivated.")
+                break
+
+    def activate_file(self) -> None:   
+        if not any(isinstance(handler, RotatingFileHandler) for handler in self.logger.handlers):
+            filename = __main__.__file__.split("/")[-1].split(".")[0]
+            name = filename if filename != "__main__" else "example"
+            now: str  = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')            
+            file_name = f"LOG_{name}/{now}.log"
+
+            log_path = Path(file_name)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+
+            fmt = logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s")
+
+            file_handler = RotatingFileHandler(
+                filename    = file_name, 
+                maxBytes    = 5 * 1024 * 1024, 
+                backupCount = 3,            
+                encoding    = "utf-8"
+            )
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(fmt)
+
+            self.logger.addHandler(file_handler)
+            self.logger.info("File logging activated.")
 
     def info(self, message: str) -> None:
         self.logger.info(message)
@@ -125,9 +183,18 @@ class HandleDebug:
 log = HandleDebug()
 
 if __name__ == "__main__":        
-    log.info("Sending joint coordinates over TCP...")
+    log.info   ("Sending joint coordinates over TCP...")
     log.warning("Coordinates received. Actuators engaging.")
-    log.info("Attempting to close gripper...")
+    log.info   ("Attempting to close gripper...")
+
+    log.deactivate_file()
+    log.info('This message will only appear in the console, not in the file.')
+    log.activate_file()
+
+    log.deactivate_console()
+    log.info('This message will only be logged to the file, not shown in the console.')
+    log.activate_console()
+
 
     @log.flow
     def teste_flow(a: int, b: int) -> int:
@@ -139,6 +206,9 @@ if __name__ == "__main__":
             time.sleep(1)
         return f"Finished | {x} seconds."
     
+
+
     log.warning(teste_time(2))
+
 
     #raise RuntimeError("Collision detected on axis 6!")
