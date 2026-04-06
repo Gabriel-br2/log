@@ -1,8 +1,6 @@
 iniconfig==2.3.0
--e git+https://github.com/Gabriel-br2/log.git@0123dbd5ca23c5a3955c63fa435aef92c96cdddb#egg=log
 markdown-it-py==4.0.0
 mdurl==0.1.2
-numpy==2.4.4
 packaging==26.0
 pluggy==1.6.0
 Pygments==2.20.0
