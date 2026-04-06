@@ -198,28 +198,27 @@ class HandleLog:
 
     def info(self, *args, **kwargs) -> None:
         msg = self._format_string(*args, **kwargs)
-        self.logger.info(msg)
+        self.logger.info(msg, stacklevel=2)
     
     def debug(self, *args, **kwargs) -> None:
         msg = self._format_string(*args, **kwargs)
-        self.logger.debug(msg)
+        self.logger.debug(msg, stacklevel=2)
 
     def warning(self, *args, **kwargs) -> None:
         msg = self._format_string(*args, **kwargs)
-        self.logger.warning(msg)
+        self.logger.warning(msg, stacklevel=2)
 
     def error(self, *args, **kwargs) -> None:
         msg = self._format_string(*args, **kwargs)
-        self.logger.error(msg)
+        self.logger.error(msg, stacklevel=2)
 
     def critical(self, *args, **kwargs) -> None:
         msg = self._format_string(*args, **kwargs)
-        self.logger.critical(msg)
+        self.logger.critical(msg, stacklevel=2)
 
     def exception(self, *args, **kwargs) -> None:
         msg = self._format_string(*args, **kwargs)
-        self.logger.exception(msg)
-
+        self.logger.exception(msg, stacklevel=2)
 
 
 if __name__ == "__main__":        
@@ -228,8 +227,6 @@ if __name__ == "__main__":
     log.info("Sending joint coordinates over TCP...")
     log.warning("Coordinates received. Actuators engaging.")
     log.info("Attempting to close gripper...")
-
-    log.activate_file()
 
     @log.flow
     def teste_flow(a: int, b: int) -> int:
@@ -243,4 +240,4 @@ if __name__ == "__main__":
 
     log.debug([1, 2, 3, 4, 5, 6])
 
-    raise RuntimeError("Collision detected on axis 6!")
+    #raise RuntimeError("Collision detected on axis 6!")
