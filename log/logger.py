@@ -228,9 +228,10 @@ class HandleDebug:
         self.logger.exception(msg)
 
 
-log = HandleDebug()
 
 if __name__ == "__main__":        
+    log = HandleDebug()
+    
     log.info("Sending joint coordinates over TCP...")
     log.warning("Coordinates received. Actuators engaging.")
     log.info("Attempting to close gripper...")

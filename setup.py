@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="log",
-    version="0.0.2",
+    version="0.0.3",
     packages=find_packages(),
     install_requires=[
         "numpy>=2.2.6",
@@ -12,6 +12,11 @@ setup(
         "rich>=14.3.3",
         "setuptools>=82.0.1"
     ],
+    entry_points={
+        'console_scripts': [
+            'log-filter = log.cli:main', 
+        ],
+    },
     author="Gabriel Rocha de Souza",
     author_email="souza.gabriel.0210@gmail.com",
     description="Codes used for terminal logging",

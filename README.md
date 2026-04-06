@@ -78,6 +78,48 @@ By default, the system keeps logs for 7 days. You can change this behavior at an
 # This immediately triggers a cleanup of older files.
 log.change_keep_log(days=3)
 ```
+
+
+## 🔍 CLI Log Filtering Utility
+
+When debugging long-running embedded systems or complex state machines, log files can become massive. To streamline your analysis, this repository includes a built-in Command Line Interface (CLI) utility to parse and filter your generated `.log` files directly from the terminal.
+
+You can easily extract precisely what you need without manually scrolling through thousands of lines.
+
+### Arguments & Flags
+
+| Argument / Flag | Description | Example |
+| :--- | :--- | :--- |
+| `file` *(Positional)* | The direct path to the log file you want to analyze. | `LOG_main/my_log.log` |
+| `-l`, `--level` | Filters the output to show only a specific log level. | `-l ERROR` |
+| `-d`, `--date` | Filters the output by a specific date or time substring. | `-d "2026-04-06"` |
+| `-t`, `--traceback` | Drops all standard logs and extracts **only** the exception/traceback blocks. | `--traceback` |
+
+### Usage Examples
+
+**1. Filter by Log Level:**
+Quickly find all hardware faults or critical events by filtering out the standard `INFO` and `DEBUG` noise.
+```bash
+log-filter LOG_main/2026-04-06_10-00-00.log -l CRITICAL
+```
+
+**2. Filter by Specific Time Window:**
+If you know an anomaly occurred at a specific minute, you can isolate those logs using a partial timestamp match.
+```bash
+log-filter LOG_main/2026-04-06_10-00-00.log -d "2026-04-06 10:39"
+```
+
+**3. Combine Date and Level:**
+Find all warnings that occurred on a specific date.
+```bash
+log-filter LOG_main/2026-04-06_10-00-00.log -d "2026-04-06" -l WARNING
+```
+
+**4. Extract Only Tracebacks (Crash Reports):**
+If the system crashed and you only want to read the raw exception tracebacks to diagnose the failure state:
+```bash
+log-filter LOG_main/2026-04-06_10-00-00.log --traceback
+```
    
 ## ⚙️ System Behavior
 
