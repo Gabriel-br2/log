@@ -18,8 +18,8 @@ def setup_and_teardown():
 
 
 def test_singleton_behavior():
-    log1 = HandleLog("test_app")
-    log2 = HandleLog("other_name")
+    log1 = HandleLog(file_log=False, name="test_app")
+    log2 = HandleLog(file_log=False, name="other_name")
     
     assert log1.name == log2.name
     assert log1.logger is log2.logger
@@ -27,7 +27,7 @@ def test_singleton_behavior():
 
 
 def test_format_string():
-    log = HandleLog("teste_fmt")
+    log = HandleLog(file_log=False, name="teste_fmt")
     
     assert log._format_string("Erro", "grave", 404) == "Erro grave 404"
     
@@ -38,7 +38,7 @@ def test_format_string():
 
 
 def test_file_creation():
-    log = HandleLog("teste_arquivo")
+    log = HandleLog(file_log=True, name="teste_arquivo")
     
     caminho_log = Path(log.file_name)
     assert caminho_log.exists()
@@ -47,7 +47,7 @@ def test_file_creation():
 
 
 def test_flow_decorator():
-    log = HandleLog("teste_flow")
+    log = HandleLog(file_log=False, name="teste_flow")
     
     @log.flow
     def soma(a, b):
@@ -58,7 +58,7 @@ def test_flow_decorator():
 
 
 def test_time_decorator():
-    log = HandleLog("teste_time")
+    log = HandleLog(file_log=False, name="teste_time")
     
     @log.time
     def multiplica(a, b):
@@ -69,7 +69,7 @@ def test_time_decorator():
 
 
 def test_change_keep_log():
-    log = HandleLog("teste_retencao")
+    log = HandleLog(file_log=False, name="teste_retencao")
     assert log.keep_logs_for_days == 7 # Valor padrão
     
     log.change_keep_log(15)
