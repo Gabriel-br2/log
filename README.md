@@ -37,9 +37,6 @@ Integrating **HandleDebug** into your codebase is straightforward. Since it uses
 ```python
 from log import log
 
-# Initialize the logger (creates the folder and file automatically)
-log = HandleDebug(name="RoboticArm_Controller")
-
 log.info("System booting up...")
 log.debug("Checking connections on port 502...")
 log.warning("Actuator on Axis 3 is running slightly hot.")
