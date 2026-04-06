@@ -43,7 +43,7 @@ def test_file_creation():
     caminho_log = Path(log.file_name)
     assert caminho_log.exists()
     assert caminho_log.is_file()
-    assert caminho_log.parent.name == "LOG_pytest"
+    assert caminho_log.parent.name == "LOG_teste_arquivo"
 
 
 def test_flow_decorator():
