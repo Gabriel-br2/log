@@ -35,7 +35,9 @@ Integrating **HandleDebug** into your codebase is straightforward. Since it uses
 ### 1. Basic Initialization and Standard Logging
 
 ```python
-from log import log
+from log import HandleDebug
+
+log = HandleDebug()
 
 log.info("System booting up...")
 log.debug("Checking connections on port 502...")
@@ -125,7 +127,7 @@ log-filter LOG_main/2026-04-06_10-00-00.log --traceback
 
 The system operates as a globally accessible singleton (via the Borg pattern), ensuring that all parts of the embedded application write to the exact same log context and file. 
 
-* **Initialization:** Upon the first import, it automatically creates a log directory named after the executing script (e.g., `LOG_main/`) and generates a timestamped log file.
+* **Initialization:** Upon the first import, it creates a log directory named after the executing script (e.g., `LOG_main/`) and generates a timestamped log file.
 * **Automatic Log Rotation:** It scans the directory and deletes log files older than a specified number of days to prevent the embedded device from running out of storage.
 * **Exception Hooking:** It overrides Python's default `sys.excepthook`. If a critical hardware fault or unhandled software exception occurs (e.g., a robotic collision), the system captures the full traceback, local variables, and logs it critically before crashing.
 * **Dynamic Output Routing:** It allows developers to turn console and file logging on or off dynamically during runtime via method calls, which is useful for silencing logs during high-frequency polling loops.

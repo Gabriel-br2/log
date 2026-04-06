@@ -53,9 +53,7 @@ class HandleDebug:
         if not hasattr(self, 'is_initialized'):
             self.keep_logs_for_days: int = 7
             
-            main_file = getattr(__main__, '__file__', name)
-            file_base = main_file.split("/")[-1].split(".")[0]
-            self.name = file_base if file_base != "example" else name
+            self.name = name
             
             now: str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')            
             self.file_name = f"LOG_{self.name}/{now}.log"
