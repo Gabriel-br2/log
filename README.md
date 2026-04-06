@@ -2,7 +2,7 @@
 
 ## 📝 Project Description
 
-The **HandleDebug** module is a robust, rich-text-enabled logging utility designed for embedded software, robotics, and systems. It provides a drop-in replacement for standard print statements, offering dual-channel logging (console and file), automatic log rotation, execution timing, system flow tracing. By leveraging the `rich` library, it ensures high visibility for system state changes and hardware faults, making debugging complex state machines or TCP-controlled robotics significantly easier.
+The **HandleLog** module is a robust, rich-text-enabled logging utility designed for embedded software, robotics, and systems. It provides a drop-in replacement for standard print statements, offering dual-channel logging (console and file), automatic log rotation, execution timing, system flow tracing. By leveraging the `rich` library, it ensures high visibility for system state changes and hardware faults, making debugging complex state machines or TCP-controlled robotics significantly easier.
 
 ## 📦 Installation
 
@@ -30,14 +30,14 @@ If you want to modify the source code or contribute to the project, clone the re
 
 ## 🚀 Usage Example
 
-Integrating **HandleDebug** into your codebase is straightforward. Since it uses a singleton-like pattern (Borg), you can initialize it in multiple files without duplicating handlers or log files.
+Integrating **HandleLog** into your codebase is straightforward. Since it uses a singleton-like pattern (Borg), you can initialize it in multiple files without duplicating handlers or log files.
 
 ### 1. Basic Initialization and Standard Logging
 
 ```python
-from log import HandleDebug
+from log import HandleLog
 
-log = HandleDebug()
+log = HandleLog(file_log=True, name="robot_arm")
 
 log.info("System booting up...")
 log.debug("Checking connections on port 502...")
@@ -81,6 +81,38 @@ By default, the system keeps logs for 7 days. You can change this behavior at an
 log.change_keep_log(days=3)
 ```
 
+
+
+
+
+
+
+
+You can opt out of generating a log file during initialization by passing `file_log=False`. This is highly beneficial during early prototyping, when running unit tests, or if your embedded system is temporarily operating on a read-only filesystem.
+
+```python
+from your_package_name import HandleDebug
+
+# Initializes console logging only. No disk writing occurs.
+log = HandleDebug(name="robot_arm", file_log=False)
+
+log.info("System booting up in console-only mode...")
+```
+
+Furthermore, you can dynamically enable file logging mid-execution. Only the logs generated *after* the activation command will be written to the disk, which is perfect for capturing data only when a specific routine (like a calibration sequence) begins.
+
+```python
+from your_package_name import HandleDebug
+
+# Start with console-only logging
+log = HandleDebug(name="robot_arm", file_log=False)
+
+log.info("Running pre-flight checks... (Console only)")
+
+# An event occurs, and we want to start saving logs to disk
+log.activate_file()
+log.info("Moving to home position. (This is now saved to the log file!)")
+```
 
 ## 🔍 CLI Log Filtering Utility
 
@@ -135,7 +167,7 @@ The system operates as a globally accessible singleton (via the Borg pattern), e
 ## 📂 Code Structure
 The codebase is structured into two primary classes and a set of utility decorators:
 
-* **`HandleDebug` (Core Class):** The main logging manager. Handles assignment (File and Console), and provides standard logging methods (`info`, `debug`, `warning`, `error`, `critical`, `exception`).
+* **`HandleLog` (Core Class):** The main logging manager. Handles assignment (File and Console), and provides standard logging methods (`info`, `debug`, `warning`, `error`, `critical`, `exception`).
 * **`@flow` (Decorator):** Wraps functions to automatically log input arguments (`args`, `kwargs`) upon entry and the returned result upon exit.
 * **`@time` (Decorator):** Wraps functions to measure and log their exact execution time using a high-resolution performance counter, crucial for real-time system profiling.
 
@@ -143,14 +175,14 @@ The codebase is structured into two primary classes and a set of utility decorat
 The system is designed to be plug-and-play, but allows for the following runtime configurations:
 
 * **Log Retention (`keep_logs_for_days`):** Configured via the `change_keep_log(days: int)` method. Defaults to 7 days.
-* **Log Directory Name:** Automatically derived from the `__main__` execution file, but can be overridden by passing a `name` string to the `HandleDebug(name="custom_name")` constructor.
+* **Log Directory Name:** Automatically derived from the `__main__` execution file, but can be overridden by passing a `name` string to the `HandleLog(name="custom_name")` constructor.
 * **Runtime Toggles:** * `activate()` / `deactivate()`: Toggles the entire logging system.
     * `activate_console()` / `deactivate_console()`: Manages stdout printing.
     * `activate_file()` / `deactivate_file()`: Manages disk writes.
 
 ## 📌 Notes
 * **Dependencies:** This module requires the `rich` library. Ensure you run `pip install rich` on your target hardware.
-* **Global State:** Because it uses the Borg pattern (`self.__dict__ = self._shared_state`), you can instantiate `log = HandleDebug()` in multiple files, and they will all share the same configuration and file lock.
+* **Global State:** Because it uses the Borg pattern (`self.__dict__ = self._shared_state`), you can instantiate `log = HandleLog()` in multiple files, and they will all share the same configuration and file lock.
 
 ## ⚠️ Common Errors
 

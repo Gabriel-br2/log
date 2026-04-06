@@ -20,7 +20,7 @@ F = TypeVar('F', bound=Callable[..., Any])
 class FormatoHibridoRich(logging.Formatter):
     def __init__(self, fmt: str):
         super().__init__(fmt)
-        self.console = Console(color_system=None, width=120)
+        self.console: Console = Console(color_system=None, width=120)
 
     def format(self, record: logging.LogRecord) -> str:
         exc_info = record.exc_info
@@ -44,23 +44,18 @@ class FormatoHibridoRich(logging.Formatter):
         return capture.get().rstrip('\n')
 
 
-class HandleDebug:
+class HandleLog:
     _shared_state: Dict[str, Any] = {}
 
-    def __init__(self, name: str = "example"):
+    def __init__(self, file_log: bool, name: str = "example"):
         self.__dict__ = self._shared_state
 
         if not hasattr(self, 'is_initialized'):
             self.keep_logs_for_days: int = 7
             
-            self.name = name
+            self.file_log: bool = file_log
+            self.name    : str  = name
             
-            now: str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')            
-            self.file_name = f"LOG_{self.name}/{now}.log"
-
-            log_path = Path(self.file_name)
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-
             self.logger = logging.getLogger(f"{self.name}")
             self.logger.setLevel(logging.DEBUG)
             self.logger.propagate = False
@@ -77,30 +72,38 @@ class HandleDebug:
                 tracebacks_show_locals = True,
                 markup                 = True,
             )
+            
+            self.rich_formatter = FormatoHibridoRich(fmt=self.base_fmt)
+            self.logger.addHandler(console_handler)
+    
+            sys.excepthook = self._excepthook
+            self.clear_logs()
+            
+            self.is_initialized = True
+            self.setup_file_logging()
+
+    def setup_file_logging(self) -> None:
+        if self.file_log:
+            now: str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')            
+            self.file_name = f"LOG_{self.name}/{now}.log"
+            
+            log_path = Path(self.file_name)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
 
             file_handler = FileHandler(
                 filename = self.file_name, 
                 encoding = "utf-8",
             )
             file_handler.setLevel(logging.DEBUG)
-            
-            rich_formatter = FormatoHibridoRich(fmt=self.base_fmt)
-            file_handler.setFormatter(rich_formatter)
-
-            self.logger.addHandler(console_handler)
+            file_handler.setFormatter(self.rich_formatter)
             self.logger.addHandler(file_handler)
-            sys.excepthook = self._excepthook
-            
-            self.clear_logs()
-            
-            self.is_initialized = True
-
+    
     def change_keep_log(self, days: int) -> None:
         self.keep_logs_for_days = days
         self.clear_logs()
 
     def __repr__(self) -> str:
-        return f"HandleDebug(name={self.logger.name})"
+        return f"HandleLog(name={self.logger.name})"
     
     def clear_logs(self) -> None:
         log_dir = Path(f"LOG_{self.name}")
@@ -173,6 +176,7 @@ class HandleDebug:
             self.logger.info("Console logging activated.")
 
     def deactivate_file(self) -> None:
+        self.file_log = False
         for handler in self.logger.handlers:
             if isinstance(handler, FileHandler):
                 self.logger.removeHandler(handler)
@@ -180,18 +184,9 @@ class HandleDebug:
                 break
 
     def activate_file(self) -> None:   
-        if not any(isinstance(handler, FileHandler) for handler in self.logger.handlers):
-            file_handler = FileHandler(
-                filename = self.file_name, 
-                encoding = "utf-8"
-            )
-            file_handler.setLevel(logging.DEBUG)
-            
-            rich_formatter = FormatoHibridoRich(fmt=self.base_fmt)
-            file_handler.setFormatter(rich_formatter)
-
-            self.logger.addHandler(file_handler)
-            self.logger.info("File logging activated.")
+        self.file_log = True
+        self.setup_file_logging()
+        self.logger.info("File logging activated.")
 
     def _format_string(self, *args, **kwargs) -> str:
         msg = " ".join(str(arg) for arg in args)
@@ -228,11 +223,13 @@ class HandleDebug:
 
 
 if __name__ == "__main__":        
-    log = HandleDebug()
+    log = HandleLog(file_log=False, name="robot_arm")
     
     log.info("Sending joint coordinates over TCP...")
     log.warning("Coordinates received. Actuators engaging.")
     log.info("Attempting to close gripper...")
+
+    log.activate_file()
 
     @log.flow
     def teste_flow(a: int, b: int) -> int:

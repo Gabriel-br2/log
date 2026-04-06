@@ -1,1 +1,1 @@
-from .logger import HandleDebug
+from .logger import HandleLog
